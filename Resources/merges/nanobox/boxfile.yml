@@ -1,0 +1,79 @@
+run.config:
+  engine: php
+  engine.config:
+    runtime: php-7.1
+    webserver: nginx
+    document_root: web
+    nginx_default_gateway: app.php
+    date_timezone: 'Europe/Brussels'
+    extensions:
+      - apcu
+      - ctype
+      - dom
+      - iconv
+      - intl
+      - mbstring
+      - pdo
+      - pdo_mysql
+      - session
+      - simplexml
+      - tokenizer
+      - xml
+      - xmlwriter
+      - zip
+      - zlib
+    zend_extensions:
+      - opcache
+      - xdebug
+    dev_zend_extensions:
+      add:
+        - xdebug
+      rm:
+        - opcache
+  extra_steps:
+    - cp nanobox/nginx.conf /data/etc/nginx/nginx.conf
+#    - yarn
+  extra_path_dirs:
+    - vendor/bin
+#    - node_modules/.bin
+  build_triggers:
+    - nanobox/nginx.conf
+    - composer.lock
+#  cache_dirs:
+#    - node_modules
+
+deploy.config:
+  transform:
+    - composer dump-autoload -o --apcu --no-dev --no-scripts
+    - mkdir web/bundles
+#    - encore production
+
+  before_live:
+    web.main:
+      - sudo chown gonano /app/var
+      - php bin/console doctrine:cache:clear-metadata
+      - php bin/console cache:clear
+      - php bin/console cache:warmup
+      - composer run-script symfony-scripts
+
+data.db:
+  image: nanobox/mysql:5.7
+
+data.storage:
+  image: nanobox/unfs:0.9
+
+web.main:
+  start: php-server
+  cron:
+    - id: mail-spool
+      schedule: '* * * * * *'
+      command: 'bin/console swiftmailer:spool:send --message-limit=50'
+  writable_dirs:
+    - var
+    - web/bundles
+  network_dirs:
+    data.storage:
+      - storage
+  log_watch:
+    symfony[test]: /app/var/logs/test.log
+    symfony[prod]: /app/var/logs/prod.log
