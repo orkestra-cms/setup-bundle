@@ -1,0 +1,12 @@
+run.config:
+  engine.config:
+    extensions:
+      - igbinary
+      - memcached
+
+deploy.config:
+  before_live:
+    - php bin/console doctrine:cache:clear-metadata
+
+data.memcached:
+  image: nanobox/memcached:1.4
