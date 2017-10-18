@@ -1,0 +1,9 @@
+services:
+  orkestra.setup.merger.json:
+    class: Orkestra\Bundles\SetupBundle\Mergers\JsonMerger
+
+  orkestra.setup.merger.line:
+    class: Orkestra\Bundles\SetupBundle\Mergers\LineMerger
+
+  orkestra.setup.merger.yaml:
+    class: Orkestra\Bundles\SetupBundle\Mergers\YamlMerger
