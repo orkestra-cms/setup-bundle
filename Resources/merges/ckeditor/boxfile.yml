@@ -1,0 +1,14 @@
+run.config:
+  extra_packages:
+    - nodejs
+  extra_steps:
+    - yarn
+  extra_path_dirs:
+    - node_modules/.bin
+  cache_dirs:
+    - node_modules
+
+deploy.config:
+  before_live:
+    web.main:
+      - bin/console ckeditor:install --clear=drop /app/web/bundles/ckeditor

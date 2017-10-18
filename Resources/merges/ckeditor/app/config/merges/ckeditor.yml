@@ -1,0 +1,12 @@
+ivory_ck_editor:
+  default_config: basic
+  configs:
+    basic:
+      toolbar: standard
+  toolbars:
+    items:
+      standard.document: []
+      standard.editing: []
+      standard.about: ['Format']
+      standard.insert: ['Table', 'HorizontalRule']
+
