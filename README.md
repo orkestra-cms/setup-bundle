@@ -137,8 +137,7 @@ Installs Webpack/Encore and a default Webpack configuration. This also includes
 a default set of stylesheets/scripts for [Bootstrap](https://getbootstrap.com) 
 and [Font-Awesome](http://fontawesome.io). 
 
-Make sure to import `merges/webpack.yml` in `app/config/config.yml` and remove
-the default `framework.assets` configuration.
+Make sure to import `merges/webpack.yml` in `app/config/config.yml`.
 
 During development you may run `node_modules/.bin/encore dev --watch` to have
 real-time compilation of your assets.
