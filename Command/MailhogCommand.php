@@ -2,13 +2,25 @@
 
 namespace Orkestra\Bundles\SetupBundle\Command;
 
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
 class MailhogCommand extends SetupCommand
 {
+    /**
+     * {@inheritdoc}
+     */
     protected function configure()
     {
         $this->setName('mailhog')
-            ->setDescription('')
-            ->markForCopy('app/config/merges/mailhog.yml')
-            ->markForCopy('nanobox/nginx.mailhog.conf');
+            ->setDescription('Installs MailHog and required configuration files.')
+            ->markAllForCopy();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function preExecute(InputInterface $input, OutputInterface $output)
+    {
     }
 }

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [[ "$APP_NAME" = "dev" ]]; then
+    exec /data/var/home/gonano/go/bin/MailHog -ui-web-path mailbox -maildir-path /app/storage/mailhog -storage maildir
+elif [[ "$SYMFONY_ENV" != "prod" ]]; then
+    PWD=$(/data/var/home/gonano/go/bin/MailHog bcrypt $MAIL_PASS)
+    echo "$MAIL_USER:$PWD" > /tmp/mailhog.auth
+    exec /data/var/home/gonano/go/bin/MailHog -ui-web-path mailbox -maildir-path /app/storage/mailhog -storage maildir -auth-file /tmp/mailhog.auth
+fi

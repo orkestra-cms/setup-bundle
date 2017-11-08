@@ -18,6 +18,7 @@ class LineMerger implements MergerInterface
      */
     public function merge(string $source, string $destination, bool $markedForCopy): MergerInterface
     {
+        if (!$markedForCopy) return $this;
         if ($this->copy($source, $destination, $markedForCopy)) return $this;
         $left = file($destination);
         $right = file($source);

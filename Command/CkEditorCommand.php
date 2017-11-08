@@ -2,7 +2,6 @@
 
 namespace Orkestra\Bundles\SetupBundle\Command;
 
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -15,8 +14,15 @@ class CkEditorCommand extends SetupCommand
     {
         $this
             ->setName('ckeditor')
-            ->setDescription('TODO')
-            ->requirePackage('egeloen/ckeditor-bundle')
+            ->setDescription('Installs the CKEditor bundle and some a toolbar configuration.')
+            ->addComposerPackage('egeloen/ckeditor-bundle')
             ->markForCopy('app/config/merges/ckeditor.yml');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function preExecute(InputInterface $input, OutputInterface $output)
+    {
     }
 }

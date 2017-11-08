@@ -13,10 +13,11 @@ class JsonMerger implements MergerInterface
      */
     public function merge(string $source, string $destination, bool $markedForCopy): MergerInterface
     {
+        if (!$markedForCopy) return $this;
         if ($this->copy($source, $destination, $markedForCopy)) return $this;
         $left = json_decode(file_get_contents($destination), true);
         $right = json_decode(file_get_contents($source), true);
-        $final = $this->mergeJson($left, $right);
+        $final = array_merge_recursive($left, $right);
         file_put_contents($destination, json_encode($final, JSON_PRETTY_PRINT));
         return $this;
     }

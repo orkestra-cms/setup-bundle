@@ -1,0 +1,10 @@
+services:
+  session:
+    class: Symfony\Component\HttpFoundation\Session\Session
+    arguments:
+      - '@session.storage'
+      - '@app.session.attribute_bag'
+      - '@session.flash_bag'
+
+  app.session.attribute_bag:
+    class: Symfony\Component\HttpFoundation\Session\Attribute\NamespacedAttributeBag

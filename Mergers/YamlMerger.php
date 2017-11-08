@@ -15,24 +15,14 @@ class YamlMerger implements MergerInterface
      */
     public function merge(string $source, string $destination, bool $markedForCopy): MergerInterface
     {
+        if (!$markedForCopy) return $this;
         if ($this->copy($source, $destination, $markedForCopy)) return $this;
         $parser = new Parser();
         $dumper = new Dumper();
         $left = $parser->parse(file_get_contents($destination));
         $right = $parser->parse(file_get_contents($source));
-        $final = $this->mergeYaml($left, $right);
+        $final = array_merge_recursive($left, $right);
         file_put_contents($destination, $dumper->dump($final, 10));
         return $this;
-    }
-
-    private function mergeYaml(&$left, &$right) {
-        foreach($right as $key => $value) {
-            if (!is_array($value)) {
-                $left[$key] = $right[$key];
-            } else {
-                $left[$key] = $this->mergeYaml($left[$key], $right[$key]);
-            }
-        }
-        return $left;
     }
 }

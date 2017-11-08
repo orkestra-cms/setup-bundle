@@ -3,6 +3,10 @@ run.config:
     - go
   extra_steps:
     - cp nanobox/nginx.mailhog.conf /data/etc/nginx/nginx.mailhog.conf
+    - cp nanobox/start-mailhog /data/bin/start-mailhog
     - go get github.com/mailhog/MailHog
-    - sed -i "2i if [ \"\$SYMFONY_ENV\" != \"prod\" ]; then echo \"\$MAIL_USER:\$(/data/var/home/gonano/go/bin/MailHog bcrypt \$MAIL_PASS)\" > /tmp/mailhog.auth; fi" /data/bin/php-server
-    - sed -i "3i if [ \"\$SYMFONY_ENV\" != \"prod\" ]; then /data/var/home/gonano/go/bin/MailHog -ui-web-path mailbox -maildir-path /app/storage/mailhog -storage maildir -auth-file /tmp/mailhog.auth; fi &" /data/bin/php-server
+    - sed -i "2i /data/var/home/gonano/go/bin/MailHog -ui-web-path mailbox -maildir-path /app/storage/mailhog -storage maildir &" /data/bin/php-server
+
+web.main:
+  start:
+    mailhog: start-mailhog

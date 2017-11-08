@@ -5,9 +5,11 @@ namespace Orkestra\Bundles\SetupBundle\Command;
 use Orkestra\Bundles\SetupBundle\Mergers\Traits\CopyTrait;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Exception\LogicException;
+use Symfony\Component\Console\Helper\ProcessHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
+use Symfony\Component\Process\Process;
 
 abstract class SetupCommand extends ContainerAwareCommand
 {
@@ -28,7 +30,18 @@ abstract class SetupCommand extends ContainerAwareCommand
     /**
      * @var string[]
      */
-    private $requiredPackages = [];
+    private $composerPackages = [];
+    /**
+     * @var string[]
+     */
+    private $nodePackages = [];
+
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return void
+     */
+    abstract protected function preExecute(InputInterface $input, OutputInterface $output);
 
     final public function setName($name)
     {
@@ -66,11 +79,12 @@ abstract class SetupCommand extends ContainerAwareCommand
      * This method allows a command to force it to be copied when it doesn't exist.
      *
      * @param string $relativePath
+     * @param string|null $destinationName
      * @return $this
      */
-    final protected function markForCopy(string $relativePath)
+    final protected function markForCopy(string $relativePath, string $destinationName = null)
     {
-        $this->markedForCopy[$relativePath] = true;
+        $this->markedForCopy[$relativePath] = empty($destinationName) ? $relativePath : $destinationName;
         return $this;
     }
 
@@ -78,11 +92,25 @@ abstract class SetupCommand extends ContainerAwareCommand
      * Installs a Composer package when executing the command.
      *
      * @param string $package
+     * @param bool $dev
+     * @param string|null $version
      * @return $this
      */
-    final protected function requirePackage(string $package)
+    final protected function addComposerPackage(string $package, bool $dev = false, string $version = null)
     {
-        $this->requiredPackages[$package] = true;
+        $this->composerPackages[$package] = [$version, $dev];
+        return $this;
+    }
+
+    /**
+     * @param string $package
+     * @param bool $dev
+     * @param string|null $version
+     * @return $this
+     */
+    final protected function addNodePackage(string $package, bool $dev = false, string $version = null)
+    {
+        $this->nodePackages[$package] = [$version, $dev];
         return $this;
     }
 
@@ -91,6 +119,8 @@ abstract class SetupCommand extends ContainerAwareCommand
      */
     final protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->preExecute($input, $output);
+
         $kernel = $this->getContainer()->get('kernel');
         $projectDir = $this->getContainer()->getParameter('kernel.project_dir');
         $sourcePath = $kernel->locateResource(
@@ -99,13 +129,16 @@ abstract class SetupCommand extends ContainerAwareCommand
         if (!is_dir($sourcePath)) {
             throw new LogicException('No files found for the "%s" merge.', $this->mergeName);
         }
+
         // Process all merge files
         $finder = new Finder();
         $finder->files()->ignoreDotFiles(false)->in($sourcePath);
         foreach($finder as $file) {
             $relativePath = str_replace('\\', '/', $file->getRelativePathname());
             $source = $file->getPathname();
-            $destination = sprintf('%s/%s', $projectDir, $relativePath);
+            $destination = array_key_exists($relativePath, $this->markedForCopy)
+                ? $this->markedForCopy[$relativePath] : $relativePath;
+            $destination = $projectDir . '/' . $destination;
             switch($file->getExtension()) {
                 case 'gitignore':
                 case 'nanoignore':
@@ -131,6 +164,32 @@ abstract class SetupCommand extends ContainerAwareCommand
                     break;
             }
         }
+
+        /** @var ProcessHelper $processHelper */
+        $processHelper = $this->getHelper('process');
+        $processDir = $this->getContainer()->getParameter('kernel.project_dir');
+        $output->setVerbosity(OutputInterface::VERBOSITY_DEBUG);
         // Install Composer packages
+        foreach($this->composerPackages as $package => $options) {
+            list($version, $dev) = $options;
+            $cmd = 'composer require --no-scripts';
+            if ($dev) $cmd .= ' --dev';
+            $cmd .= ' ' . $package;
+            if (!empty($version)) $cmd .= ':"' . $version . '"';
+
+            $process = (new Process($cmd, $processDir))->setTimeout(3600);
+            $processHelper->run($output, $process, null, null, OutputInterface::VERBOSITY_DEBUG);
+        }
+        // Install Node.js packages
+        foreach($this->nodePackages as $package => $options) {
+            list($version, $dev) = $options;
+            $cmd = 'yarn add';
+            if ($dev) $cmd .= ' --dev';
+            $cmd .= ' ' . $package;
+            if (!empty($version)) $cmd .= '@' . $version;
+
+            $process = (new Process($cmd, $processDir))->setTimeout(3600);
+            $processHelper->run($output, $process, null, null, OutputInterface::VERBOSITY_DEBUG);
+        }
     }
 }
