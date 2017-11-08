@@ -1,5 +1,6 @@
 {
-    "name": "orkestra/setup-bundle",
+    "name": "orkestra-cms/setup-bundle",
+    "description": "Bundle allowing easy setup of new Symfony projects",
     "type": "symfony-bundle",
     "license": "MIT",
     "authors": [
